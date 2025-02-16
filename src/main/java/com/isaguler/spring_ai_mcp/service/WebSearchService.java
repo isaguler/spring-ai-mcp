@@ -1,12 +1,12 @@
 package com.isaguler.spring_ai_mcp.service;
 
+import io.modelcontextprotocol.client.McpClient;
+import io.modelcontextprotocol.client.transport.ServerParameters;
+import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.mcp.client.McpClient;
-import org.springframework.ai.mcp.client.stdio.ServerParameters;
-import org.springframework.ai.mcp.client.stdio.StdioClientTransport;
-import org.springframework.ai.mcp.spring.McpFunctionCallback;
+import org.springframework.ai.mcp.SyncMcpToolCallback;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,21 +26,21 @@ public class WebSearchService {
                 .addEnvVar("BRAVE_API_KEY", System.getenv("BRAVE_API_KEY"))
                 .build();
 
-        var mcpClient = McpClient.using(new StdioClientTransport(stdioParams)).sync();
+        var mcpClient = McpClient.sync(new StdioClientTransport(stdioParams)).build();
 
         var init = mcpClient.initialize();
 
         log.info("MCP client initialized: {}", init);
 
         var chatClient = chatClientBuilder
-                .defaultFunctions(mcpClient.listTools(null)
+                .defaultTools(mcpClient.listTools(null)
                         .tools()
                         .stream()
-                        .map(tool -> new McpFunctionCallback(mcpClient, tool))
-                        .toArray(McpFunctionCallback[]::new))
+                        .map(tool -> new SyncMcpToolCallback(mcpClient, tool))
+                        .toArray(SyncMcpToolCallback[]::new))
                 .build();
 
-        String response = chatClient.prompt(message).call().content();
+        var response = chatClient.prompt(message).call().content();
 
         log.info("Response from MCP: {}", response);
 

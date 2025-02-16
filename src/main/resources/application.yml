@@ -6,6 +6,11 @@ spring:
     virtual:
       enabled: true
   ai:
+#    mcp:
+#      client:
+#        stdio:
+#          enabled: true
+#          servers-configuration: classpath:/mcp-servers-config.json
     ollama:
       chat:
         model: llama3.2
